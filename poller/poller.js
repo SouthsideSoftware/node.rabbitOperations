@@ -1,13 +1,27 @@
+'use strict';
+
 var lib = require('amqp-worker');
 var Client = lib.Client;
 var Worker = lib.Worker;
-var utf8 = require('utf8');
+var ConnectionStringBuilder = require('../rabbitConnectionStringBuilder.js');
+
+var defaultPollerOptions = {
+    host: "10.211.55.5",
+    user: "test",
+    password: "test",
+    frameMax: 0,
+    rabbitVhost: undefined,
+    "errorQueue": "error",
+    "auditQueue": "error"
+}
+
+var connectionString = new ConnectionStringBuilder().build(defaultPollerOptions);
 
 // create instance of Client for a connection
 var client = new Client(
 
     // AMQP URL to connect to, same as url parameter on amqplib connect
-    'amqp://test:test@10.211.55.5?frameMax=0',
+    connectionString,
 
     // options to send on connect, same as socketOptions on amqplib connect
     {
@@ -16,7 +30,7 @@ var client = new Client(
 );
 
 // create instance of Worker for channel and consume
-var worker1 = new Worker(
+var errorWorker = new Worker(
     // queue name
     'error',
 
@@ -59,12 +73,12 @@ var worker1 = new Worker(
 );
 
 // complete event when message handler callback is called
-worker1.on('complete', function(data) {
-    process.stdout.write('.');
+errorWorker.on('complete', function(data) {
+    process.stdout.write('E');
 });
 
 // create instance of Worker for channel and consume
-var worker2 = new Worker(
+var auditWorker = new Worker(
     // queue name
     'audit',
 
@@ -99,7 +113,7 @@ var worker2 = new Worker(
         },
 
         // prefetch count
-        count: 5,
+        count: 10,
 
         // requeue on nack
         requeue: true
@@ -107,13 +121,13 @@ var worker2 = new Worker(
 );
 
 // complete event when message handler callback is called
-worker2.on('complete', function(data) {
-    process.stdout.write('E');
+auditWorker.on('complete', function(data) {
+    process.stdout.write('.');
 });
 
 // you can add multiple workers to a client
-client.addWorker(worker1);
-client.addWorker(worker2);
+client.addWorker(errorWorker);
+client.addWorker(auditWorker);
 
 // connect starts the connection and starts the queue workers
 client.connect(function(err) {
