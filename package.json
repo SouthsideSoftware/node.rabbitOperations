@@ -1,0 +1,13 @@
+{
+  "name": "node.rabbitOperations",
+  "description": "Tool to help manage a microservices infrastructure that uses RabbitMQ as a transport",
+  "author": "Southside Software, LLC <info@southsidesoft.com>",
+  "version": "0.0.1",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "gulp": "^3.9.0"
+  },
+  "dependencies": {
+    "amqp-worker": "0.0.1"
+  }
+}
