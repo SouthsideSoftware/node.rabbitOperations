@@ -17,9 +17,12 @@ gulp.task('test', function() {
         .pipe(mocha());
 });
 
-gulp.task('default', function() {
-    runSequence('lint', 'test');
+gulp.task('watch', function() {
     gulp.watch(['*.js', '**/*.js'], function() {
         runSequence('lint', 'test');
     });
+});
+
+gulp.task('default', function() {
+    runSequence('lint', 'test');
 });
