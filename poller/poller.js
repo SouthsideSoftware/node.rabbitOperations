@@ -15,6 +15,41 @@ var defaultPollerOptions = {
     "auditQueue": "error"
 }
 
+var processMessage = function(msg, callback, type) {
+    try {
+        var result = msg.content.toString();
+        type === 'audit' ? process.stdout.write('.') : process.stdout.write('E');
+        // the message is ack'ed on success
+        // second parameter is optional for logging
+        callback(null, result);
+    } catch(err) {
+
+        process.stdout.write('X');
+        // the message is nack'ed on error
+        callback(err);
+    }
+};
+
+var workerOptions = {
+    // queue options, same as options on amqplib Channel#assertQueue
+    queue: {
+        durable: true
+    },
+
+    // consumer options, same as options on amqplib Channel#consume
+    consumer: {
+
+        // if noAck is true, messages won't be ack/nack'ed upon completion
+        noAck: false
+    },
+
+    // prefetch count
+    count: 10,
+
+    // requeue on nack
+    requeue: true
+}
+
 var connectionString = new ConnectionStringBuilder().build(defaultPollerOptions);
 
 // create instance of Client for a connection
@@ -37,45 +72,11 @@ var errorWorker = new Worker(
     // message handler
     // msg will be the same object passed to message callback on amqplib Channel#consume
     function(msg, callback) {
-        try {
-            var result = msg.content.toString();
-
-            // the message is ack'ed on success
-            // second parameter is optional for logging
-            callback(null, result);
-        } catch(err) {
-
-            // the message is nack'ed on error
-            callback(err);
-        }
+        processMessage(msg, callback, 'error');
     },
 
-    // worker options
-    {
-        // queue options, same as options on amqplib Channel#assertQueue
-        queue: {
-            durable: true
-        },
-
-        // consumer options, same as options on amqplib Channel#consume
-        consumer: {
-
-            // if noAck is true, messages won't be ack/nack'ed upon completion
-            noAck: false
-        },
-
-        // prefetch count
-        count: 10,
-
-        // requeue on nack
-        requeue: true
-    }
+    workerOptions
 );
-
-// complete event when message handler callback is called
-errorWorker.on('complete', function(data) {
-    process.stdout.write('E');
-});
 
 // create instance of Worker for channel and consume
 var auditWorker = new Worker(
@@ -85,45 +86,11 @@ var auditWorker = new Worker(
     // message handler
     // msg will be the same object passed to message callback on amqplib Channel#consume
     function(msg, callback) {
-        try {
-            var result = msg.content.toString();
-
-            // the message is ack'ed on success
-            // second parameter is optional for logging
-            callback(null, result);
-        } catch(err) {
-
-            // the message is nack'ed on error
-            callback(err);
-        }
+        processMessage(msg, callback, 'audit');
     },
 
-    // worker options
-    {
-        // queue options, same as options on amqplib Channel#assertQueue
-        queue: {
-            durable: true
-        },
-
-        // consumer options, same as options on amqplib Channel#consume
-        consumer: {
-
-            // if noAck is true, messages won't be ack/nack'ed upon completion
-            noAck: false
-        },
-
-        // prefetch count
-        count: 10,
-
-        // requeue on nack
-        requeue: true
-    }
+    workerOptions
 );
-
-// complete event when message handler callback is called
-auditWorker.on('complete', function(data) {
-    process.stdout.write('.');
-});
 
 // you can add multiple workers to a client
 client.addWorker(errorWorker);
