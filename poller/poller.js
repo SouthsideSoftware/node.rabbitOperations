@@ -6,11 +6,11 @@ var Worker = lib.Worker;
 var ConnectionStringBuilder = require('../rabbitConnectionStringBuilder.js');
 
 var defaultPollerOptions = {
-    host: "10.211.55.5",
+    host: "10.211.55.15",
     user: "test",
     password: "test",
     frameMax: 0,
-    rabbitVhost: undefined,
+    vhost: "test",
     "errorQueue": "error",
     "auditQueue": "error"
 }
@@ -99,8 +99,10 @@ client.addWorker(auditWorker);
 // connect starts the connection and starts the queue workers
 client.connect(function(err) {
     if (err) {
+        console.log('*************')
         console.log(err);
+        console.log('*************')
         return process.exit(1);
     }
-    console.log('client connected to server');
+    process.stdout.write('** CONNECTED **')
 });
