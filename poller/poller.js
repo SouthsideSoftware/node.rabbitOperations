@@ -6,13 +6,13 @@ var Worker = lib.Worker;
 var ConnectionStringBuilder = require('../rabbitConnectionStringBuilder.js');
 
 var defaultPollerOptions = {
-    host: "10.211.55.15",
+    host: "services.local.com",
     user: "test",
     password: "test",
     frameMax: 0,
     vhost: "test",
     "errorQueue": "error",
-    "auditQueue": "error"
+    "auditQueue": "audit"
 }
 
 var processMessage = function(msg, callback, type) {

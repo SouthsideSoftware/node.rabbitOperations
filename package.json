@@ -14,6 +14,9 @@
     "run-sequence": "^1.1.0"
   },
   "dependencies": {
-    "amqp-worker": "0.0.1"
+    "amqp-worker": "0.0.1",
+    "amqplib": "^0.3.2",
+    "retry": "^0.6.1",
+    "when": "^3.7.3"
   }
 }
