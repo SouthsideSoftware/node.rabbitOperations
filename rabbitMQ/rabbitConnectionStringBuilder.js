@@ -1,8 +1,8 @@
 /*jshint -W097 */
 'use strict';
 
-var RabbitConnectionStringBuilder = (function() {
-   RabbitConnectionStringBuilder.prototype.build = function(connectionOptions){
+var RabbitConnectionStringBuilder = {
+   build: function(connectionOptions){
         var host = 'localhost';
         var credentials = '';
         var vhost = '';
@@ -23,7 +23,7 @@ var RabbitConnectionStringBuilder = (function() {
             }
         }
         return 'amqp://' + credentials + host + vhost + frameMax;
-    };
-});
+    }
+};
 
 module.exports = RabbitConnectionStringBuilder;

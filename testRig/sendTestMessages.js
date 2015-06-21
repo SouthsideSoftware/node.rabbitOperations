@@ -1,84 +1,34 @@
 'use strict';
 
-var amqp = require('amqplib');
-var when = require('when');
-var retry = require('retry');
 
-var ConnectionStringBuilder = require('../rabbitConnectionStringBuilder.js');
+var cli = require('cli');
+var merge = require('merge');
+var MessageSender = require('./MessageSender.js');
 
-var connectionOptions = {
-    host: "services.local.com",
-    user: "test",
-    password: "test",
+var defaultOptions = {
+    host: 'services.local.com',
+    user: 'test',
+    password: 'test',
     frameMax: 0,
-    vhost: "test",
-    "errorQueue": "error",
-    "auditQueue": "audit"
-}
-
-var connectionString = new ConnectionStringBuilder().build(connectionOptions);
-
-
-function sendMessage(){
-    return amqp.connect(connectionString).then(function(conn) {
-        conn.on('error', function(err){
-            console.log('Connection error ' + err)
-        })
-        return when(conn.createChannel().then(function(ch) {
-            ch.on('error', function(err){
-                console.log('Channel error ' + err);
-            });
-            console.log('trying...');
-            var q = 'audit-x';
-            var msg = 'Hello World!';
-
-            var ok = ch.checkQueue(q);
-
-            return ok.then(function(queueInfo) {
-                console.log('queuInfo: ' + queueInfo);
-                ch.sendToQueue(q, new Buffer(msg));
-                console.log(" [x] Sent '%s'", msg);
-                return ch.close();
-            }).catch(function(e){
-                console.log('Send error ' + e);
-                throw e;
-            });
-        })).ensure(function() {
-            console.log('closing connection')
-            conn.close();
-        });
-    });
-}
-
-function minutesToMilliseconds(mins){
-    return mins * 60 * 1000;
-}
-
-var secondsInMinute = 60;
-var millisecondsInSecond = 1000;
-var retryOptions = {
-    retries: 10000,
-    factor: 2,
-    minTimeout: 1000,
-    maxTimeout: minutesToMilliseconds(5),
-    randomize: false
-
+    vhost: 'test',
+    exchange: 'audit',
+    messagesPerMinute: 60
 };
-var operation = retry.operation(retryOptions);
-operation.attempt(function(currentAttempt){
-    try {
-        sendMessage().catch(function(err){
-            if (operation.retry(err)){
-                var delay = Math.min(retryOptions.minTimeout * Math.pow(retryOptions.factor, currentAttempt), retryOptions.maxTimeout) / 1000;
-                console.log('in retry ' + currentAttempt + ' of ' + retryOptions.retries + ' with timeout ' + delay + 's because of error '+ err);
-                return;
-            }
-        }).done(function(){
-            console.log('done');
-        });
-    } catch (err){
-        if (operation.retry(err)){
-            return;
-        }
-    }
+
+cli.parse({
+    host: ['h', 'RabbitMQ host', 'string', defaultOptions.host],
+    user: ['u', 'RabbitMQ user', 'string', defaultOptions.user],
+    password: ['p', 'RabbitMQ password', 'string', defaultOptions.password],
+    vhost: ['v', 'RabbitMQ VHost', 'string', defaultOptions.vhost],
+    exchange: ['q', 'Destination exchange that will receive messages', 'string', defaultOptions.exchange],
+    template: ['t', 'Message template', 'string'],
+    messagesPerMinute: ['m', 'Messages per minute', 'string', defaultOptions.messagesPerMinute]
 });
+
+
+cli.main(function(args, options) {
+    var sender = new MessageSender(merge(defaultOptions, options), cli);
+    cli.spinner('Sending message ' + (sender.options.template === null ? 'Hello World' : sender.options.template) + ' at rate ' + sender.options.messagesPerMinute + '/min ');
+    sender.sendWithRetry();
+});
+
