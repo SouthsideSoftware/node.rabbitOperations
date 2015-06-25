@@ -6,6 +6,7 @@
   "license": "GPL-3.0",
   "devDependencies": {
     "chai": "^3.0.0",
+    "chai-as-promised": "^5.1.0",
     "elasticsearch": "^5.0.0",
     "gulp": "^3.9.0",
     "gulp-jshint": "^1.11.0",
@@ -17,7 +18,9 @@
     "amqp-worker": "0.0.1",
     "amqplib": "^0.3.2",
     "cli": "^0.8.0",
+    "fs": "0.0.2",
     "merge": "^1.2.0",
+    "path": "^0.11.14",
     "retry": "^0.6.1",
     "when": "^3.7.3"
   }
