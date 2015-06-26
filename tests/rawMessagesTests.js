@@ -58,7 +58,6 @@ describe('load', function(){
         var rawMessage = new RawMessage();
         var fileName = path.resolve(__dirname, '../testRig/messageTemplates/error.json');
         rawMessage.load(fileName).then(function(){
-            Object.keys(rawMessage.headers).length.should.equal(Object.keys(headers).length);
             rawMessage.headers.should.deep.equal(headers);
             done();
         }).catch(function(err){
